@@ -1,0 +1,97 @@
+import React from 'react';
+import { CheckCircle, AlertTriangle, Lightbulb, ChevronRight } from 'lucide-react';
+
+const sectionConfig = {
+  strengths: {
+    title: 'Strengths',
+    icon: CheckCircle,
+    gradient: 'linear-gradient(135deg, #10b981, #34d399)',
+    bgColor: 'rgba(16, 185, 129, 0.06)',
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+    textColor: '#10b981',
+    emoji: '💪',
+  },
+  redFlags: {
+    title: 'Red Flags',
+    icon: AlertTriangle,
+    gradient: 'linear-gradient(135deg, #ef4444, #f87171)',
+    bgColor: 'rgba(239, 68, 68, 0.06)',
+    borderColor: 'rgba(239, 68, 68, 0.2)',
+    textColor: '#ef4444',
+    emoji: '🚩',
+  },
+  suggestions: {
+    title: 'Suggestions',
+    icon: Lightbulb,
+    gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
+    bgColor: 'rgba(245, 158, 11, 0.06)',
+    borderColor: 'rgba(245, 158, 11, 0.2)',
+    textColor: '#f59e0b',
+    emoji: '💡',
+  },
+};
+
+function InsightCard({ type, items }) {
+  const config = sectionConfig[type];
+  const Icon = config.icon;
+
+  return (
+    <div
+      className="rounded-2xl border p-5 transition-all hover:shadow-lg"
+      style={{ background: config.bgColor, borderColor: config.borderColor }}
+    >
+      <div className="flex items-center gap-3 mb-4">
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
+          style={{ background: config.gradient }}
+        >
+          <Icon className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>
+            {config.emoji} {config.title}
+          </h3>
+          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            {items.length} {items.length === 1 ? 'item' : 'items'} found
+          </span>
+        </div>
+      </div>
+
+      {items.length === 0 ? (
+        <p className="text-sm italic" style={{ color: 'var(--text-muted)' }}>
+          {type === 'redFlags' ? 'No red flags — great job!' : 'None detected'}
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {items.map((item, i) => (
+            <li
+              key={i}
+              className="flex items-start gap-2 text-sm animate-fade-in-up"
+              style={{ animationDelay: `${i * 0.05}s`, color: 'var(--text-secondary)' }}
+            >
+              <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: config.textColor }} />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function Insights({ strengths, redFlags, suggestions }) {
+  return (
+    <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+      <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
+        📋 Recruiter Insights
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 stagger-children">
+        <InsightCard type="strengths" items={strengths || []} />
+        <InsightCard type="redFlags" items={redFlags || []} />
+        <InsightCard type="suggestions" items={suggestions || []} />
+      </div>
+    </div>
+  );
+}
+
+export default Insights;
