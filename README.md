@@ -29,9 +29,8 @@
 | **Mobile Responsiveness** | ✅ Complete | 100% |
 | **Rate Limit Optimization** | ✅ Implemented | 100% |
 
-**📽️ Demo Video:** [Watch the Full Demo](./Outputs/DemoVideo.mp4)  
-**📊 Sample Outputs:** Located in [`/output`](./output) directory or [`/Outputs`](./Outputs) directory  
-**✨ Visuals:** [Backend/Frontend Flow](./Outputs/Visual.mp4)
+**📽️ Demo Video:** [Watch the Full Demo](https://drive.google.com/file/d/1cXbXnwZPfbT3QLEp8q9kvjfkg77TzExW/view?usp=drivesdk)  
+**✨ Visuals:** [Project Workflow & Logic](https://drive.google.com/file/d/1RunqL911IMjYbNs066XncButpiPXoUsY/view?usp=drivesdk)
 
 ---
 
