@@ -1,68 +1,50 @@
 # Dependencies
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+**/node_modules/
+jspdf/
 package-lock.json
+**/package-lock.json
+yarn.lock
 
-# Build outputs
+# Build & Production
 build/
 dist/
 .next/
 out/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Environment variables
+# Environment & Secrets
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*.local
 backend/.env
 
-# IDE
-.idea/
+# IDE & OS
 .vscode/
+.idea/
 *.swp
 *.swo
-*.code-workspace
-
-# OS
 .DS_Store
 Thumbs.db
-desktop.ini
 
-# Logs
-logs/
-*.log
-
-# Testing
+# Testing & Coverage
 coverage/
 .nyc_output/
+__pycache__/
 
-# Temporary files
-tmp/
-temp/
-*.tmp
-
-# Backend
-backend/data/
-backend/*.sqlite
-
-# Frontend
-frontend/src/reportWebVitals.js
-
-# Dataset (keep extracted, ignore zip internals)
-dataset/extracted/__pycache__/
-
-# Gemini / Agent artifacts
-.gemini/
-.agent/
-
-# Archive
+# Archive & Media
+*.zip
 *.zip.bak
-
-# Demo Videos
 *.mp4
 *.webm
 *.mov
 demo/
+dataset/archive.zip
+
+# Gemini / Agent artifacts
+.gemini/
+.agent/
+brain/

@@ -12,7 +12,8 @@ async function analyzeGitHubProfile(input, type = 'user', weights) {
   if (!isRepo && input.includes(' ')) {
     try {
       const searchRes = await axios.get(`${GITHUB_API}/search/users`, {
-        params: { q: input, per_page: 1 }
+        params: { q: input, per_page: 1 },
+        headers: process.env.GITHUB_TOKEN ? { Authorization: `token ${process.env.GITHUB_TOKEN}` } : {}
       });
       if (searchRes.data.items && searchRes.data.items.length > 0) {
         username = searchRes.data.items[0].login;
@@ -28,11 +29,15 @@ async function analyzeGitHubProfile(input, type = 'user', weights) {
     // Analyze specific repository
     const [owner, repoName] = input.split('/');
     try {
-      const repoRes = await axios.get(`${GITHUB_API}/repos/${owner}/${repoName}`);
+      const repoRes = await axios.get(`${GITHUB_API}/repos/${owner}/${repoName}`, {
+        headers: process.env.GITHUB_TOKEN ? { Authorization: `token ${process.env.GITHUB_TOKEN}` } : {}
+      });
       const repo = repoRes.data;
 
       // Fetch owner profile for context
-      const profileRes = await axios.get(`${GITHUB_API}/users/${owner}`);
+      const profileRes = await axios.get(`${GITHUB_API}/users/${owner}`, {
+        headers: process.env.GITHUB_TOKEN ? { Authorization: `token ${process.env.GITHUB_TOKEN}` } : {}
+      });
       profile = profileRes.data;
 
       // Use the single repo as the list
@@ -43,10 +48,11 @@ async function analyzeGitHubProfile(input, type = 'user', weights) {
   } else {
     // Analyze user or organization
     let profileRes;
+    const authHeaders = process.env.GITHUB_TOKEN ? { Authorization: `token ${process.env.GITHUB_TOKEN}` } : {};
     if (type === 'org') {
-      profileRes = await axios.get(`${GITHUB_API}/orgs/${username}`);
+      profileRes = await axios.get(`${GITHUB_API}/orgs/${username}`, { headers: authHeaders });
     } else {
-      profileRes = await axios.get(`${GITHUB_API}/users/${username}`);
+      profileRes = await axios.get(`${GITHUB_API}/users/${username}`, { headers: authHeaders });
     }
     profile = profileRes.data;
 
@@ -56,6 +62,7 @@ async function analyzeGitHubProfile(input, type = 'user', weights) {
       const endpoint = type === 'org' ? `orgs/${username}/repos` : `users/${username}/repos`;
       const repoRes = await axios.get(`${GITHUB_API}/${endpoint}`, {
         params: { per_page: 100, page },
+        headers: authHeaders
       });
       if (repoRes.data.length === 0) break;
       repos = repos.concat(repoRes.data);

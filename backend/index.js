@@ -2,13 +2,12 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const dotenv = require('dotenv');
+dotenv.config();
 const analyzeRouter = require('./routes/analyze');
 const trendingRouter = require('./routes/trending');
 const emailRouter = require('./routes/email');
 const leaderboardRouter = require('./routes/leaderboard');
 const scoreHistoryRouter = require('./routes/score-history');
-
-dotenv.config();
 
 const app = express();
 app.use(cors());

@@ -62,4 +62,36 @@ describe('GET /api/analyze/:username with custom weights', () => {
     expect(res.body.scoreBreakdown.profile).toBeGreaterThan(10);
     expect(res.body.scoreBreakdown.repoQuality).toBeLessThan(20);
   });
+
+  test('searches for user when input has spaces', async () => {
+    // Mock search response
+    axios.get.mockImplementation((url, config) => {
+      if (url.includes('/search/users')) {
+        return Promise.resolve({
+          data: { total_count: 1, items: [{ login: 'octocat' }] }
+        });
+      }
+      if (url.includes('/users/octocat')) {
+        return Promise.resolve({
+          data: {
+            login: 'octocat',
+            name: 'The Octocat',
+            public_repos: 5,
+            followers: 100,
+            following: 5
+          }
+        });
+      }
+      if (url.includes('/repos')) {
+        return Promise.resolve({
+          data: []
+        });
+      }
+      return Promise.resolve({ data: {} });
+    });
+
+    const res = await request(app).get('/api/analyze/Bangi%20abdulla');
+    expect(res.status).toBe(200);
+    expect(res.body.profile.login).toBe('octocat');
+  });
 });

@@ -16,7 +16,7 @@ router.get('/:username', async (req, res) => {
   try {
     let parsedWeights = undefined;
     if (weights) {
-      try { parsedWeights = JSON.parse(weights); } catch {}
+      try { parsedWeights = JSON.parse(weights); } catch { }
     }
     const report = await analyzeGitHubProfile(username, type, parsedWeights);
     setCache(cacheKey, report);
