@@ -191,7 +191,8 @@ async function analyzeGitHubProfile(input, type = 'user', weights) {
     inactiveRepos,
     consistentReposCount,
     topReposCount: topRepos.length,
-    isRepo
+    isRepo,
+    score
   });
 
   return {
@@ -294,7 +295,7 @@ function computeScore({ profile, repos, totalStars, totalForks, languageCount, r
   };
 }
 
-function generateInsights({ profile, repos, totalStars, totalForks, languageCount, readmeCount, detailedReadmeCount, inactiveRepos, consistentReposCount, topReposCount, isRepo }) {
+function generateInsights({ profile, repos, totalStars, totalForks, languageCount, readmeCount, detailedReadmeCount, inactiveRepos, consistentReposCount, topReposCount, isRepo, score }) {
   const strengths = [];
   const redFlags = [];
   const suggestions = [];
@@ -340,6 +341,14 @@ function generateInsights({ profile, repos, totalStars, totalForks, languageCoun
   if (repos.filter(r => !r.description).length > 0) suggestions.push('Add descriptions to all repositories');
   if (repos.filter(r => !r.topics || r.topics.length === 0).length > 0) suggestions.push('Add topics (tags) to repositories');
 
+  // Score-based priority focus
+  if (score < 40) {
+    suggestions.unshift('CRITICAL: Focus on basic profile completeness and repository descriptions.');
+  } else if (score < 70) {
+    suggestions.unshift('STRATEGY: Enhance documentation depth and commit consistency to reach the elite bracket.');
+  } else {
+    suggestions.unshift('POLISH: Increase community impact and technical diversity for maximum recruiter attraction.');
+  }
 
   return { strengths, redFlags, suggestions };
 }

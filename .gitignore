@@ -41,7 +41,6 @@ __pycache__/
 *.mp4
 *.webm
 *.mov
-demo/
 dataset/archive.zip
 
 # Gemini / Agent artifacts
