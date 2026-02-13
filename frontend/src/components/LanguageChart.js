@@ -15,14 +15,32 @@ const CustomTooltip = ({ active, payload }) => {
 };
 
 function LanguageChart({ languages }) {
-  if (!languages || Object.keys(languages).length === 0) return null;
+  if (!languages || (Array.isArray(languages) && languages.length === 0) || (!Array.isArray(languages) && Object.keys(languages).length === 0)) return null;
 
-  const data = Object.entries(languages)
-    .sort((a, b) => b[1] - a[1])
+  let processedData = [];
+  if (Array.isArray(languages)) {
+    const total = languages.reduce((sum, item) => sum + item.count, 0);
+    processedData = languages.map((item) => ({
+      name: item.lang,
+      value: total > 0 ? Math.round((item.count / total) * 100) : 0,
+      rawCount: item.count
+    }));
+  } else {
+    // Fallback for object format (though backend sends array now)
+    const entries = Object.entries(languages);
+    const total = entries.reduce((sum, [, count]) => sum + count, 0);
+    processedData = entries.map(([lang, count]) => ({
+      name: lang,
+      value: total > 0 ? Math.round((count / total) * 100) : 0,
+      rawCount: count
+    }));
+  }
+
+  const data = processedData
+    .sort((a, b) => b.value - a.value)
     .slice(0, 10)
-    .map(([name, value], i) => ({
-      name,
-      value,
+    .map((item, i) => ({
+      ...item,
       fill: COLORS[i % COLORS.length],
     }));
 
