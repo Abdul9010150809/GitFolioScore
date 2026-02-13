@@ -7,15 +7,17 @@ jest.mock('axios');
 
 describe('TrendingRepos', () => {
   it('renders trending repos', async () => {
-    axios.get.mockResolvedValueOnce({ data: [
-      { name: 'repo1', description: 'desc', stars: 10, url: 'url', language: 'JS' }
-    ] });
+    axios.get.mockResolvedValueOnce({
+      data: [
+        { name: 'repo1', description: 'desc', stars: 10, url: 'url', language: 'JS' }
+      ]
+    });
     render(<TrendingRepos />);
     await waitFor(() => expect(screen.getByText('repo1')).toBeInTheDocument());
   });
   it('shows error on failure', async () => {
     axios.get.mockRejectedValueOnce(new Error('fail'));
     render(<TrendingRepos />);
-    await waitFor(() => expect(screen.getByText(/Failed to load/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Unable to load/)).toBeInTheDocument());
   });
 });

@@ -21,7 +21,7 @@ function LanguageChart({ languages }) {
   if (Array.isArray(languages)) {
     const total = languages.reduce((sum, item) => sum + item.count, 0);
     processedData = languages.map((item) => ({
-      name: item.lang,
+      name: String(item.lang || 'Unknown'),
       value: total > 0 ? Math.round((item.count / total) * 100) : 0,
       rawCount: item.count
     }));

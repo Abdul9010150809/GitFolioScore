@@ -3,36 +3,75 @@ const axios = require('axios');
 const GITHUB_API = 'https://api.github.com';
 const SIX_MONTHS_MS = 1000 * 60 * 60 * 24 * 30 * 6;
 
-async function analyzeGitHubProfile(username, type = 'user', weights) {
-  // Fetch profile (user or org)
-  let profileRes;
-  if (type === 'org') {
-    profileRes = await axios.get(`${GITHUB_API}/orgs/${username}`);
+async function analyzeGitHubProfile(input, type = 'user', weights) {
+  const isRepo = input.includes('/');
+  let profile, repos = [];
+  let username = input;
+
+  // Handle names with spaces (search for user)
+  if (!isRepo && input.includes(' ')) {
+    try {
+      const searchRes = await axios.get(`${GITHUB_API}/search/users`, {
+        params: { q: input, per_page: 1 }
+      });
+      if (searchRes.data.items && searchRes.data.items.length > 0) {
+        username = searchRes.data.items[0].login;
+      } else {
+        throw new Error('User not found via search');
+      }
+    } catch (err) {
+      throw new Error('User search failed');
+    }
+  }
+
+  if (isRepo) {
+    // Analyze specific repository
+    const [owner, repoName] = input.split('/');
+    try {
+      const repoRes = await axios.get(`${GITHUB_API}/repos/${owner}/${repoName}`);
+      const repo = repoRes.data;
+
+      // Fetch owner profile for context
+      const profileRes = await axios.get(`${GITHUB_API}/users/${owner}`);
+      profile = profileRes.data;
+
+      // Use the single repo as the list
+      repos = [repo];
+    } catch (err) {
+      throw new Error('Repository not found');
+    }
   } else {
-    profileRes = await axios.get(`${GITHUB_API}/users/${username}`);
-  }
-  const profile = profileRes.data;
+    // Analyze user or organization
+    let profileRes;
+    if (type === 'org') {
+      profileRes = await axios.get(`${GITHUB_API}/orgs/${username}`);
+    } else {
+      profileRes = await axios.get(`${GITHUB_API}/users/${username}`);
+    }
+    profile = profileRes.data;
 
-  // Fetch repos (user or org)
-  let repos = [];
-  let page = 1;
-  while (true) {
-    const repoRes = await axios.get(`${GITHUB_API}/${type === 'org' ? 'orgs' : 'users'}/${username}/repos`, {
-      params: { per_page: 100, page },
-    });
-    if (repoRes.data.length === 0) break;
-    repos = repos.concat(repoRes.data);
-    page++;
+    // Fetch repos (user or org)
+    let page = 1;
+    while (true) {
+      const endpoint = type === 'org' ? `orgs/${username}/repos` : `users/${username}/repos`;
+      const repoRes = await axios.get(`${GITHUB_API}/${endpoint}`, {
+        params: { per_page: 100, page },
+      });
+      if (repoRes.data.length === 0) break;
+      repos = repos.concat(repoRes.data);
+      page++;
+      if (page > 3) break; // Limit to 300 repos for performance
+    }
   }
 
-  // Fetch README presence for each repo
+  // Fetch README presence and size
   const readmeChecks = await Promise.all(
     repos.map(async (repo) => {
       try {
-        await axios.get(`${GITHUB_API}/repos/${username}/${repo.name}/readme`);
-        return true;
+        const r = await axios.get(`${GITHUB_API}/repos/${repo.full_name}/readme`);
+        return { exists: true, size: r.data.size };
       } catch {
-        return false;
+        return { exists: false, size: 0 };
       }
     })
   );
@@ -42,15 +81,21 @@ async function analyzeGitHubProfile(username, type = 'user', weights) {
   let totalStars = 0, totalForks = 0;
   const languageCount = {};
   let readmeCount = 0;
+  let detailedReadmeCount = 0;
   let inactiveRepos = 0;
+
   const repoStats = repos.map((repo, i) => {
     totalStars += repo.stargazers_count;
     totalForks += repo.forks_count;
     if (repo.language) languageCount[repo.language] = (languageCount[repo.language] || 0) + 1;
-    if (readmeChecks[i]) readmeCount++;
+    if (readmeChecks[i].exists) {
+      readmeCount++;
+      if (readmeChecks[i].size > 1000) detailedReadmeCount++;
+    }
     if (new Date(repo.updated_at).getTime() < now - SIX_MONTHS_MS) inactiveRepos++;
     return {
       name: repo.name,
+      full_name: repo.full_name,
       description: repo.description,
       stars: repo.stargazers_count,
       forks: repo.forks_count,
@@ -58,36 +103,50 @@ async function analyzeGitHubProfile(username, type = 'user', weights) {
       topics: repo.topics,
       updated_at: repo.updated_at,
       created_at: repo.created_at,
-      hasReadme: readmeChecks[i],
+      hasReadme: readmeChecks[i].exists,
+      readmeSize: readmeChecks[i].size
     };
   });
 
-
-  // Top 5 repos by stars/forks
+  // Top 5 repos (or just the 1 if repo analysis)
   const topRepos = [...repoStats]
     .sort((a, b) => (b.stars + b.forks) - (a.stars + a.forks))
     .slice(0, 5);
 
-  // Fetch commit activity, issues, PRs, contributors for top repos
+  // Fetch commit activity...
   const commitActivity = {};
   const repoInsights = {};
+  let consistentReposCount = 0;
+
   await Promise.all(topRepos.map(async (repo) => {
+    const owner = isRepo ? input.split('/')[0] : input;
+    const name = repo.name;
     try {
       const [commitRes, issuesRes, prsRes, contribRes] = await Promise.all([
-        axios.get(`${GITHUB_API}/repos/${username}/${repo.name}/stats/commit_activity`),
-        axios.get(`${GITHUB_API}/repos/${username}/${repo.name}/issues`, { params: { state: 'open', per_page: 5 } }),
-        axios.get(`${GITHUB_API}/repos/${username}/${repo.name}/pulls`, { params: { state: 'open', per_page: 5 } }),
-        axios.get(`${GITHUB_API}/repos/${username}/${repo.name}/contributors`, { params: { per_page: 5 } })
+        axios.get(`${GITHUB_API}/repos/${repo.full_name}/stats/commit_activity`),
+        axios.get(`${GITHUB_API}/repos/${repo.full_name}/issues`, { params: { state: 'open', per_page: 5 } }),
+        axios.get(`${GITHUB_API}/repos/${repo.full_name}/pulls`, { params: { state: 'open', per_page: 5 } }),
+        axios.get(`${GITHUB_API}/repos/${repo.full_name}/contributors`, { params: { per_page: 5 } })
       ]);
-      commitActivity[repo.name] = commitRes.data;
-      repoInsights[repo.name] = {
+      commitActivity[name] = commitRes.data;
+
+      // Analyze consistency (if data is array)
+      if (Array.isArray(commitRes.data) && commitRes.data.length > 0) {
+        // Check last 12 weeks for gaps
+        const recentWeeks = commitRes.data.slice(-12);
+        const activeWeeks = recentWeeks.filter(w => w.total > 0).length;
+        // If active more than 50% of weeks, it's consistent
+        if (activeWeeks >= 6) consistentReposCount++;
+      }
+
+      repoInsights[name] = {
         issues: issuesRes.data.map(i => ({ number: i.number, title: i.title, url: i.html_url })),
         prs: prsRes.data.map(p => ({ number: p.number, title: p.title, url: p.html_url })),
         contributors: contribRes.data.map(c => ({ login: c.login, url: c.html_url, avatar_url: c.avatar_url }))
       };
-    } catch {
-      commitActivity[repo.name] = [];
-      repoInsights[repo.name] = { issues: [], prs: [], contributors: [] };
+    } catch (e) {
+      commitActivity[name] = [];
+      repoInsights[name] = { issues: [], prs: [], contributors: [] };
     }
   }));
 
@@ -104,8 +163,12 @@ async function analyzeGitHubProfile(username, type = 'user', weights) {
     totalForks,
     languageCount,
     readmeCount,
+    detailedReadmeCount,
     inactiveRepos,
-    weights
+    consistentReposCount,
+    topReposCount: topRepos.length,
+    weights,
+    isRepo
   });
   const score = Object.values(scoreBreakdown).reduce((a, b) => a + b, 0);
 
@@ -117,7 +180,11 @@ async function analyzeGitHubProfile(username, type = 'user', weights) {
     totalForks,
     languageCount,
     readmeCount,
+    detailedReadmeCount,
     inactiveRepos,
+    consistentReposCount,
+    topReposCount: topRepos.length,
+    isRepo
   });
 
   return {
@@ -129,8 +196,8 @@ async function analyzeGitHubProfile(username, type = 'user', weights) {
     repoStats,
     topRepos,
     mostUsedLanguages,
-    commitActivity, // { repoName: [ { total, week, days }, ... ] }
-    repoInsights,   // { repoName: { issues, prs, contributors } }
+    commitActivity,
+    repoInsights,
     profile: {
       name: profile.name,
       login: profile.login,
@@ -151,7 +218,7 @@ async function analyzeGitHubProfile(username, type = 'user', weights) {
   };
 }
 
-function computeScore({ profile, repos, totalStars, totalForks, languageCount, readmeCount, inactiveRepos, weights }) {
+function computeScore({ profile, repos, totalStars, totalForks, languageCount, readmeCount, detailedReadmeCount, inactiveRepos, consistentReposCount, topReposCount, weights, isRepo }) {
   // Default weights
   const w = {
     profile: 15,
@@ -164,11 +231,15 @@ function computeScore({ profile, repos, totalStars, totalForks, languageCount, r
   };
   // Profile completeness
   let profileScore = 0;
-  if (profile.bio) profileScore += w.profile * 0.2;
-  if (profile.avatar_url) profileScore += w.profile * 0.2;
-  if (profile.location) profileScore += w.profile * 0.2;
-  if (profile.company) profileScore += w.profile * 0.2;
-  if (profile.public_repos >= 3) profileScore += w.profile * 0.2;
+  if (!isRepo) {
+    if (profile.bio) profileScore += w.profile * 0.2;
+    if (profile.avatar_url) profileScore += w.profile * 0.2;
+    if (profile.location) profileScore += w.profile * 0.2;
+    if (profile.company) profileScore += w.profile * 0.2;
+    if (profile.public_repos >= 3) profileScore += w.profile * 0.2;
+  } else {
+    profileScore = w.profile;
+  }
 
   // Repo quality
   let repoQuality = 0;
@@ -176,23 +247,33 @@ function computeScore({ profile, repos, totalStars, totalForks, languageCount, r
   const withTopics = repos.filter(r => r.topics && r.topics.length > 0).length;
   repoQuality += Math.min(w.repoQuality * 0.4, (withDesc / repos.length) * w.repoQuality * 0.4);
   repoQuality += Math.min(w.repoQuality * 0.4, (withTopics / repos.length) * w.repoQuality * 0.4);
-  repoQuality += Math.min(w.repoQuality * 0.2, (readmeCount / repos.length) * w.repoQuality * 0.2);
+  // Detailed README bonus in quality
+  const detailedRatio = detailedReadmeCount / repos.length;
+  repoQuality += Math.min(w.repoQuality * 0.2, detailedRatio * w.repoQuality * 0.2);
 
   // Activity consistency
   let activity = 0;
   const activeRepos = repos.length - inactiveRepos;
-  activity += Math.min(w.activity, (activeRepos / repos.length) * w.activity);
+  activity += Math.min(w.activity * 0.6, (activeRepos / repos.length) * w.activity * 0.6);
+  // Consistency bonus (based on weekly commits)
+  if (topReposCount > 0) {
+    activity += Math.min(w.activity * 0.4, (consistentReposCount / topReposCount) * w.activity * 0.4);
+  }
 
   // Project impact
   let impact = 0;
-  impact += Math.min(w.impact * 0.5, totalStars / 50 * w.impact * 0.5);
-  impact += Math.min(w.impact * 0.5, totalForks / 20 * w.impact * 0.5);
+  impact += Math.min(w.impact * 0.5, totalStars / (isRepo ? 10 : 50) * w.impact * 0.5);
+  impact += Math.min(w.impact * 0.5, totalForks / (isRepo ? 5 : 20) * w.impact * 0.5);
 
-  // Language diversity
+  // Language diversity (Skip for single repo)
   let diversity = 0;
-  diversity += Math.min(w.diversity, Object.keys(languageCount).length * 2);
+  if (!isRepo) {
+    diversity += Math.min(w.diversity, Object.keys(languageCount).length * 2);
+  } else {
+    diversity = w.diversity;
+  }
 
-  // README + docs
+  // README + docs (Base existence score)
   let docs = 0;
   docs += Math.min(w.docs, (readmeCount / repos.length) * w.docs);
 
@@ -206,37 +287,51 @@ function computeScore({ profile, repos, totalStars, totalForks, languageCount, r
   };
 }
 
-function generateInsights({ profile, repos, totalStars, totalForks, languageCount, readmeCount, inactiveRepos }) {
+function generateInsights({ profile, repos, totalStars, totalForks, languageCount, readmeCount, detailedReadmeCount, inactiveRepos, consistentReposCount, topReposCount, isRepo }) {
   const strengths = [];
   const redFlags = [];
   const suggestions = [];
 
   // Strengths
-  if (profile.bio) strengths.push('Profile bio is set');
-  if (profile.avatar_url) strengths.push('Profile avatar present');
-  if (profile.location) strengths.push('Location specified');
-  if (profile.company) strengths.push('Company specified');
-  if (profile.public_repos >= 3) strengths.push('Good number of public repos');
-  if (Object.keys(languageCount).length >= 3) strengths.push('Diverse language usage');
-  if (totalStars > 20) strengths.push('Projects have received stars');
-  if (totalForks > 5) strengths.push('Projects have been forked');
+  if (!isRepo) {
+    if (profile.bio) strengths.push('Profile bio is set');
+    if (profile.avatar_url) strengths.push('Profile avatar present');
+    if (profile.location) strengths.push('Location specified');
+    if (profile.company) strengths.push('Company specified');
+    if (profile.public_repos >= 3) strengths.push('Good number of public repos');
+    if (Object.keys(languageCount).length >= 3) strengths.push('Diverse language usage');
+  } else {
+    strengths.push('Analyzing specific repository');
+  }
+
+  if (totalStars > (isRepo ? 5 : 20)) strengths.push('Description has stars'); // Fixed typo
+  if (totalStars > (isRepo ? 5 : 20)) strengths.push('Project has received stars');
+  if (totalForks > (isRepo ? 2 : 5)) strengths.push('Project has been forked');
+  if (detailedReadmeCount >= (isRepo ? 1 : 3)) strengths.push('Detailed documentation found');
+  if (consistentReposCount >= (isRepo ? 1 : 2)) strengths.push('Consistent commit activity');
 
   // Red Flags
-  if (readmeCount < repos.length / 2) redFlags.push('Many repos missing README');
-  if (inactiveRepos > repos.length / 2) redFlags.push('Many repos inactive');
-  if (repos.filter(r => !r.description).length > repos.length / 2) redFlags.push('Many repos missing descriptions');
-  if (repos.filter(r => !r.topics || r.topics.length === 0).length > repos.length / 2) redFlags.push('Many repos missing topics');
+  if (readmeCount < repos.length / 2) redFlags.push('Many repositories missing README');
+  if (detailedReadmeCount < repos.length / 4) redFlags.push('READMEs lack depth/detail'); // New Red Flag
+  if (inactiveRepos > repos.length / 2) redFlags.push('High ratio of inactive repositories');
+  if (topReposCount > 0 && consistentReposCount < topReposCount / 2) redFlags.push('Inconsistent commit activity'); // New Red Flag
+  if (repos.filter(r => !r.description).length > 0) redFlags.push('Repositories missing description');
 
   // Suggestions
-  if (!profile.bio) suggestions.push('Add a bio to your profile');
-  if (!profile.avatar_url) suggestions.push('Add a profile picture');
-  if (!profile.location) suggestions.push('Specify your location');
-  if (!profile.company) suggestions.push('Add your company or organization');
-  if (readmeCount < repos.length) suggestions.push('Add README files to all repos');
-  if (inactiveRepos > 0) suggestions.push('Update inactive repositories');
-  if (Object.keys(languageCount).length < 3) suggestions.push('Try using more programming languages');
+  if (!isRepo) {
+    if (!profile.bio) suggestions.push('Add a bio to your profile');
+    if (!profile.avatar_url) suggestions.push('Add a profile picture');
+    if (!profile.location) suggestions.push('Specify your location');
+    if (!profile.company) suggestions.push('Add your company or organization');
+  }
+
+  if (readmeCount < repos.length) suggestions.push('Add README to all repositories');
+  if (detailedReadmeCount < repos.length / 2) suggestions.push('Expand READMEs with detailed project info'); // New Sugg
+  if (inactiveRepos > 0) suggestions.push('Archive or update inactive repositories');
+  if (topReposCount > 0 && consistentReposCount < topReposCount) suggestions.push('Commit more consistently to top projects'); // New Sugg
+  if (!isRepo && Object.keys(languageCount).length < 3) suggestions.push('Try using more programming languages');
   if (repos.filter(r => !r.description).length > 0) suggestions.push('Add descriptions to all repositories');
-  if (repos.filter(r => !r.topics || r.topics.length === 0).length > 0) suggestions.push('Add topics to all repositories');
+  if (repos.filter(r => !r.topics || r.topics.length === 0).length > 0) suggestions.push('Add topics (tags) to repositories');
 
 
   return { strengths, redFlags, suggestions };

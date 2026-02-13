@@ -60,3 +60,9 @@ dataset/extracted/__pycache__/
 
 # Archive
 *.zip.bak
+
+# Demo Videos
+*.mp4
+*.webm
+*.mov
+demo/

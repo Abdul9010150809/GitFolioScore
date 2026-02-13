@@ -13,6 +13,7 @@ GitFolioScore is a full-stack web app that analyzes and scores GitHub portfolios
   - Language diversity
   - README/documentation
 - Dashboard UI: score card, breakdown, strengths, red flags, suggestions, top repos, language chart
+- **Smart Username Search**: Automatically finds GitHub users even if you enter a full name (e.g. "Bangi Abdulla").
 - Handles invalid usernames and API rate limits
 - Responsive, modern UI (React + Tailwind CSS)
 
@@ -42,17 +43,7 @@ GitFolioScore is a full-stack web app that analyzes and scores GitHub portfolios
    npm start
    ```
 
-## API Endpoint
-- `GET /api/analyze/:username`
-- Returns JSON with score, breakdown, strengths, redFlags, suggestions, repoStats, topRepos, mostUsedLanguages, and profile info.
+## Demo Video
+[![Watch the Demo](https://img.youtube.com/vi/placeholder/0.jpg)](https://youtu.be/placeholder)
+*(Replace `placeholder` with your actual video link)*
 
-## Scoring Logic
-- Profile completeness (15)
-- Repo quality (25)
-- Activity consistency (20)
-- Project impact (20)
-- Language diversity (10)
-- README + documentation (10)
-
-## Demo
-_Add demo video or screenshots here_

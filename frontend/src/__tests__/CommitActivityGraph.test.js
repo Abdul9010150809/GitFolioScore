@@ -6,7 +6,9 @@ import CommitActivityGraph from '../components/CommitActivityGraph';
 jest.mock('recharts', () => ({
   ResponsiveContainer: ({ children }) => <div data-testid="responsive-container">{children}</div>,
   LineChart: ({ children }) => <div data-testid="line-chart">{children}</div>,
+  AreaChart: () => <div data-testid="area-chart" />,
   Line: () => null,
+  Area: () => null,
   XAxis: () => null,
   YAxis: () => null,
   CartesianGrid: () => null,

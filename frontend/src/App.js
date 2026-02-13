@@ -7,7 +7,6 @@ import Insights from './components/Insights';
 import TopRepos from './components/TopRepos';
 import LanguageChart from './components/LanguageChart';
 import RepoInsights from './components/RepoInsights';
-import useAuth from './hooks/useAuth';
 import useDarkMode from './hooks/useDarkMode';
 import CommitActivityGraph from './components/CommitActivityGraph';
 import ExportReport from './components/ExportReport';
@@ -19,7 +18,7 @@ import ScoreTrends from './components/ScoreTrends';
 import Leaderboard from './components/Leaderboard';
 import Tips from './components/Tips';
 import WeightsForm from './components/WeightsForm';
-import { Search, Moon, Sun, LogOut, Github } from 'lucide-react';
+import { Search, Moon, Sun } from 'lucide-react';
 
 function App() {
   const [username, setUsername] = useState('');
@@ -35,7 +34,7 @@ function App() {
     diversity: 10,
     docs: 10
   });
-  const { token, login, logout } = useAuth();
+
   const [dark, setDark] = useDarkMode();
   const reportRef = useRef();
   const { i18n } = useTranslation();
@@ -46,9 +45,8 @@ function App() {
     setError('');
     setData(null);
     try {
-      const config = token ? { headers: { Authorization: `token ${token}` } } : {};
       const params = weights ? { weights: JSON.stringify(weights) } : {};
-      const res = await axios.get(`/api/analyze/${username}`, { ...config, params });
+      const res = await axios.get(`/api/analyze/${username}`, { params });
       setData(res.data);
     } catch (err) {
       if (err.response && err.response.data && err.response.data.error) {
@@ -106,28 +104,6 @@ function App() {
               >
                 {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
-
-              {token ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-indigo-200">
-                    <b className="text-white">{login}</b>
-                  </span>
-                  <button
-                    className="p-2 rounded-lg border border-white/20 bg-white/10 text-white hover:bg-red-500/20 transition-all"
-                    onClick={logout}
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <a
-                  href="/auth/github/login"
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-sm font-medium hover:bg-white/20 transition-all backdrop-blur-sm"
-                >
-                  <Github className="w-4 h-4" />
-                  Sign in
-                </a>
-              )}
             </div>
           </div>
 
@@ -151,7 +127,7 @@ function App() {
                 <input
                   className="w-full pl-12 pr-4 py-3.5 rounded-xl text-white placeholder-indigo-300/60 bg-white/10 border border-white/20 backdrop-blur-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-all text-base"
                   type="text"
-                  placeholder="Enter GitHub username..."
+                  placeholder="Enter GitHub username or owner/repo..."
                   value={username}
                   onChange={e => setUsername(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleAnalyze()}

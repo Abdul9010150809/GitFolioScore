@@ -5,7 +5,8 @@ import ShareScore from '../components/ShareScore';
 describe('ShareScore', () => {
   it('renders share buttons', () => {
     render(<ShareScore score={88} username="octocat" />);
-    expect(screen.getByText('Share on Twitter')).toBeInTheDocument();
-    expect(screen.getByText('Share on LinkedIn')).toBeInTheDocument();
+    expect(screen.getByText('𝕏 Share')).toBeInTheDocument();
+    expect(screen.getByText('in Share')).toBeInTheDocument();
+    expect(screen.getByText(/Copy/)).toBeInTheDocument();
   });
 });

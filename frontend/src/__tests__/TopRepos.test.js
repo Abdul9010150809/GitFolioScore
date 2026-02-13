@@ -3,8 +3,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import TopRepos from '../components/TopRepos';
 
 const repos = Array.from({ length: 12 }, (_, i) => ({
-  name: `repo${i+1}`,
-  description: `desc${i+1}`,
+  name: `repo${i + 1}`,
+  description: `desc${i + 1}`,
   stars: i,
   forks: i,
   language: 'JS',
@@ -13,13 +13,13 @@ const repos = Array.from({ length: 12 }, (_, i) => ({
 describe('TopRepos', () => {
   it('renders pagination and filtering', () => {
     render(<TopRepos repos={repos} />);
-    expect(screen.getByText('Repositories')).toBeInTheDocument();
+    expect(screen.getByText('Top Repositories')).toBeInTheDocument();
     // Check pagination exists by finding Next button
-    expect(screen.getByText('Next')).toBeInTheDocument();
+    expect(screen.getByText('Next →')).toBeInTheDocument();
     // Click Next and verify it works (no errors)
-    fireEvent.click(screen.getByText('Next'));
+    fireEvent.click(screen.getByText('Next →'));
     // Test search filter
-    fireEvent.change(screen.getByPlaceholderText('Search repositories...'), { target: { value: 'repo10' } });
+    fireEvent.change(screen.getByPlaceholderText('Search repos...'), { target: { value: 'repo10' } });
     expect(screen.getByText('repo10')).toBeInTheDocument();
   });
 });

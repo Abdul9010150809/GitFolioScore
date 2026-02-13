@@ -6,7 +6,7 @@ import axios from 'axios';
 jest.mock('axios');
 jest.mock('recharts', () => ({
   ResponsiveContainer: ({ children }) => <div data-testid="responsive-container">{children}</div>,
-  LineChart: ({ children }) => <div data-testid="line-chart">{children}</div>,
+  LineChart: () => <div data-testid="line-chart" />,
   Line: () => null,
   XAxis: () => null,
   YAxis: () => null,
@@ -17,11 +17,13 @@ jest.mock('recharts', () => ({
 
 describe('ScoreTrends', () => {
   it('renders score history chart', async () => {
-    axios.get.mockResolvedValueOnce({ data: [
-      { date: '2026-02-01', score: 80 },
-      { date: '2026-02-10', score: 90 }
-    ] });
+    axios.get.mockResolvedValueOnce({
+      data: [
+        { date: '2026-02-01', score: 80 },
+        { date: '2026-02-10', score: 90 }
+      ]
+    });
     render(<ScoreTrends username="octocat" />);
-    expect(await screen.findByText(/Historical Score Trends/)).toBeInTheDocument();
+    expect(await screen.findByText(/Score History/)).toBeInTheDocument();
   });
 });

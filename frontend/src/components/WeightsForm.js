@@ -41,7 +41,11 @@ function WeightsForm({ weights, setWeights, dark }) {
           return (
             <div key={key}>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-medium flex items-center gap-1.5" style={{ color: dark ? '#cbd5e1' : 'var(--text-secondary)' }}>
+                <label
+                  htmlFor={`weight-${key}`}
+                  className="text-xs font-medium flex items-center gap-1.5"
+                  style={{ color: dark ? '#cbd5e1' : 'var(--text-secondary)' }}
+                >
                   {meta.icon} {meta.label}
                 </label>
                 <span className="text-xs font-bold" style={{ color: dark ? '#a5b4fc' : 'var(--primary)' }}>
@@ -49,6 +53,7 @@ function WeightsForm({ weights, setWeights, dark }) {
                 </span>
               </div>
               <input
+                id={`weight-${key}`}
                 type="range"
                 min="0"
                 max={meta.max}

@@ -14,17 +14,17 @@ describe('WeightsForm', () => {
     };
     const setWeights = jest.fn();
     render(<WeightsForm weights={initialWeights} setWeights={setWeights} />);
-    
+
     // Check that the component renders by checking for labels using exact text
-    expect(screen.getByLabelText('profile')).toBeInTheDocument();
-    expect(screen.getByLabelText('repoQuality')).toBeInTheDocument();
-    expect(screen.getByLabelText('activity')).toBeInTheDocument();
-    expect(screen.getByLabelText('impact')).toBeInTheDocument();
-    expect(screen.getByLabelText('diversity')).toBeInTheDocument();
-    expect(screen.getByLabelText('docs')).toBeInTheDocument();
-    
+    expect(screen.getByLabelText(/Profile/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Repo Quality/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Activity/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Impact/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Diversity/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Documentation/)).toBeInTheDocument();
+
     // Simulate change on profile field
-    const input = screen.getByLabelText('profile');
+    const input = screen.getByLabelText(/Profile/);
     fireEvent.change(input, { target: { value: '30' } });
     expect(setWeights).toHaveBeenCalled();
   });
