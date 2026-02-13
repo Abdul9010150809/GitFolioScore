@@ -38,9 +38,14 @@ __pycache__/
 # Archive & Media
 *.zip
 *.zip.bak
-*.mp4
-*.webm
-*.mov
+# Allow videos specifically in these folders
+!demo/*.mp4
+!demo/*.webm
+!demo/*.mov
+!Outputs/*.mp4
+!output/*.mp4
+!output/*.webm
+!output/*.mov
 dataset/archive.zip
 
 # Gemini / Agent artifacts

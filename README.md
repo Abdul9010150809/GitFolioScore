@@ -29,8 +29,9 @@
 | **Mobile Responsiveness** | ✅ Complete | 100% |
 | **Rate Limit Optimization** | ✅ Implemented | 100% |
 
-**📽️ Demo Video:** Available in [`/demo`](./demo) directory  
-**📊 Sample Outputs:** Located in [`/output`](./output) directory
+**📽️ Demo Video:** [Watch the Full Demo](./Outputs/DemoVideo.mp4)  
+**📊 Sample Outputs:** Located in [`/output`](./output) directory or [`/Outputs`](./Outputs) directory  
+**✨ Visuals:** [Backend/Frontend Flow](./Outputs/Visual.mp4)
 
 ---
 
