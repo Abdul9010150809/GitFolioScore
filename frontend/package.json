@@ -32,9 +32,6 @@
     "eject": "react-scripts eject",
     "lint": "eslint src --ext .js,.jsx"
   },
-  "jest": {
-    "setupFilesAfterEnv": ["<rootDir>/src/setupTests.js"]
-  },
   "browserslist": {
     "production": [
       ">0.2%",
