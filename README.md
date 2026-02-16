@@ -280,22 +280,6 @@ npm run test:e2e
 
 ---
 
-## 🔮 Future Roadmap
-
-### Phase 2 (Q3 2025)
-- [ ] AI-powered code quality analysis
-- [ ] Integration with LinkedIn profile
-- [ ] Team portfolio dashboards
-- [ ] Browser extension for instant analysis
-
-### Phase 3 (Q1 2026)
-- [ ] ML-based score prediction
-- [ ] Job matching algorithm
-- [ ] Enterprise SSO integration
-- [ ] Mobile app (React Native)
-
----
-
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md).
@@ -338,7 +322,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## ⚡ From Raw Code to Recruiter-Ready Portfolio ⚡
 
-**Built with ❤️ for GitHub Portfolio Analyzer & Enhancer Hackathon**
 
 | ⭐ Star Us | 🍴 Fork Repo | 📢 Share |
 |-----------|-------------|---------|
