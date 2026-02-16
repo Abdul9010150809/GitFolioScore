@@ -9,9 +9,7 @@
 
 ---
 
-## 🏆 GitHub Portfolio Analyzer & Enhancer Hackathon
 
-**Achievement:** 🏅 **Selected in Top 50 teams at RGUKT RKV Internal Hackathon**  
 **Project:** GitFolioScore - A smart GitHub portfolio evaluator for recruiters and students
 
 ---
@@ -296,22 +294,6 @@ git push origin feature/AmazingFeature
 ```
 
 ---
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- **RGUKT RKV** for organizing the Internal Hackathon
-- **GitHub API Team** for comprehensive documentation and support
-- **Open Source Community** for amazing tools and libraries
-
----
-
-## 📞 Contact & Support
 
 - **Project Link**: [https://github.com/Abdul9010150809/GitFolioScore](https://github.com/Abdul9010150809/GitFolioScore)
 - **Issue Tracker**: [GitHub Issues](https://github.com/Abdul9010150809/GitFolioScore/issues)
